@@ -6,6 +6,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
 use Laravel\Passport\HasApiTokens;
 
 class User extends Authenticatable implements MustVerifyEmail
@@ -47,8 +48,13 @@ class User extends Authenticatable implements MustVerifyEmail
         'registered_at' => 'datetime'
     ];
 
-    public function findForPassport(string $user_name): User
+    public function findForPassport(string $username): User
     {
-        return $this->where('user_name', $user_name)->first();
+        return $this->where('username', $username)->first();
+    }
+
+    public function setPasswordAttribute(string $value): void
+    {
+        $this->attributes['password'] = Hash::make($value);
     }
 }

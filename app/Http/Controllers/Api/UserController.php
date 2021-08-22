@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\UserSignup;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 
 class UserController extends Controller
@@ -20,11 +21,41 @@ class UserController extends Controller
         //
     }
 
-    public function login(Request $request)
+    public function signin(Request $request)
     {
         $data = $request->validate([
-            'user'
-        ])
+            'username' => ['required', 'string'],
+            'password' => ['required', 'string']
+        ]);
+
+        if (!Auth::attempt($data)) {
+            return response([
+                'message' => 'Invalid Username/Password!',
+                'errors' => [
+                    'username' => 'Invalid Username/Password!',
+                    'password' => 'Invalid Username/Password!'
+                ]
+            ]);
+        }
+
+        $user = Auth::user();
+
+        if (!$user->hasVerifiedEmail()) {
+            return response([
+                'message' => 'User not yet verified!',
+                'errors' => [
+                    'username' => 'User not yet verified!'
+                ]
+            ]);
+        }
+
+        return response([
+            'message' => 'Successfully sign in!',
+            'data' => [
+                'user' => $user,
+                'accessToken' => $user->createToken('authToken')->accessToken
+            ]
+        ]);
     }
 
     /**
