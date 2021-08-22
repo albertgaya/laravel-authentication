@@ -20,6 +20,13 @@ class UserController extends Controller
         //
     }
 
+    public function login(Request $request)
+    {
+        $data = $request->validate([
+            'user'
+        ])
+    }
+
     /**
      * Show the form for creating a new resource.
      *
@@ -27,26 +34,26 @@ class UserController extends Controller
      */
     public function create(Request $request)
     {
-        $signup = $request->validate([
+        $data = $request->validate([
             'name' => ['required', 'string'],
-            'user_name' => ['required', 'string', 'unique:users,user_name'],
+            'username' => ['required', 'string', 'unique:users,username'],
             'avatar' => ['dimensions:width=256,height=256'],
             'email' => ['required', 'email'],
             'password' => ['required', 'string', 'confirmed'],
         ]);
 
         if ($request->has('avatar')) {
-            $signup['avatar'] = $signup['avatar']->store('avatars');
+            $data['avatar'] = $data['avatar']->store('avatars');
         }
 
-        $user = new User($signup);
+        $user = new User($data);
         $user->registered_at = now();
-        $user->email_verification_token = sprintf("%06d", mt_rand(1, 999999));
+        $user->email_verification_pin = sprintf("%06d", mt_rand(1, 999999));
         $user->save();
 
         Mail::to($user)->send(new UserSignup($user));
 
-        return response($user);
+        return response(['message' => 'User successfully created!', 'data' => $user]);
     }
 
     /**
@@ -92,6 +99,35 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         //
+    }
+
+    public function verify(Request $request, User $user)
+    {
+        if ($user->hasVerifiedEmail()) {
+            return response([
+                'errors' => [
+                    'user' => 'User already been verified!'
+                ]
+            ]);
+        }
+
+        $data = $request->validate([
+            'pin' => ['required', 'string']
+        ]);
+
+        if ($user->email_verification_pin !== $data['pin']) {
+            return response(
+                [
+                    'errors' => [
+                        'pin' => 'Invalid pin!'
+                    ]
+                ]
+            );
+        }
+
+        $user->markEmailAsVerified();
+
+        return response(['message' => 'Successfully verified!']);
     }
 
     /**
