@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -124,12 +125,28 @@ class UserController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  User  $user
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, User $user)
     {
-        //
+        $data = $request->validate([
+            'name' => ['string'],
+            'username' => [`unique:users,username,{$user->id}`],
+            'avatar' => ['dimensions:width=256,height=256'],
+            'email' => [`unique:users,email,{$user->id}`]
+        ]);
+
+        if ($request->has('avatar')) {
+            $data['avatar'] = $data['avatar']->store('avatars');
+        }
+
+        $user->update($data);
+
+        return response([
+            'message' => 'Successfully updated user!',
+            'data' => $user
+        ]);
     }
 
     public function verify(Request $request, User $user)

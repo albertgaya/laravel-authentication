@@ -22,3 +22,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('/signin', [UserController::class, 'signin']);
 Route::post('/signup', [UserController::class, 'create']);
 Route::post('/users/{user}/verify', [UserController::class, 'verify']);
+
+Route::middleware('auth:api')->group(function () {
+    Route::patch('/users/{user}', [UserController::class, 'update']);
+});
