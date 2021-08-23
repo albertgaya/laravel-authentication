@@ -70,7 +70,7 @@ class UserController extends Controller
             'name' => ['required', 'string'],
             'username' => ['required', 'string', 'unique:users,username'],
             'avatar' => ['dimensions:width=256,height=256'],
-            'email' => ['required', 'email'],
+            'email' => ['required', 'email', 'unique:users,email'],
             'password' => ['required', 'string', 'confirmed'],
         ]);
 
@@ -132,9 +132,9 @@ class UserController extends Controller
     {
         $data = $request->validate([
             'name' => ['string'],
-            'username' => [`unique:users,username,{$user->id}`],
+            'username' => ["unique:users,username,{$user->id}"],
             'avatar' => ['dimensions:width=256,height=256'],
-            'email' => [`unique:users,email,{$user->id}`]
+            'email' => ["unique:users,email,{$user->id}"]
         ]);
 
         if ($request->has('avatar')) {
